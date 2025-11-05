@@ -22,5 +22,5 @@ int main(int argc, char** argv){
 
     CLI11_PARSE(app, argc, argv);
 
-    return downloadGeoData(save_directory, coord_lower_left, coord_upper_right, (verbose_output) ? WRITE_OUTPUT::CONSOLE : ((write_log) ? WRITE_OUTPUT::LOGFILE : WRITE_OUTPUT::DISCARD), keep_doc);
+    return getGeoData(save_directory, coord_lower_left, coord_upper_right, (verbose_output) ? WRITE_OUTPUT::CONSOLE : ((write_log) ? WRITE_OUTPUT::LOGFILE : WRITE_OUTPUT::DISCARD), keep_doc);
 }

@@ -25,50 +25,6 @@ void showProgressBar(size_t barWidth = 50) {
     }
 }
 
-void stringToCoord_(const std::string& coordStr, Coordinate& coord) {
-    std::regex re(R"((\d+)°(\d+)′([\d.]+)″([NSEOW]))");
-    std::smatch match;
-
-    if (std::regex_search(coordStr, match, re)) {
-        double degrees = std::stod(match[1].str());
-        double minutes = std::stod(match[2].str());
-        double seconds = std::stod(match[3].str());
-        char direction = match[4].str()[0];
-
-        double decimal = degrees + minutes / 60.0 + seconds / 3600.0;
-
-        switch (direction)
-        {
-        case 'N':
-            coord.latitutde = LATITUDE::NORTH;
-            coord.latitude_degree = decimal;
-            break;
-        case 'E':
-            coord.longitude = LONGITUDE::EAST;
-            coord.longitude_degree = decimal;
-            break;
-        case 'O':
-            coord.longitude = LONGITUDE::EAST;
-            coord.longitude_degree = decimal;
-            break;
-        case 'S':
-            coord.latitutde = LATITUDE::SOUTH;
-            coord.latitude_degree = (-1) * decimal;
-            break;
-        case 'W':
-            coord.longitude = LONGITUDE::WEST;
-            coord.longitude_degree = (-1) * decimal;
-            break;
-        
-        default:
-            break;
-        }
-        return;
-    } else {
-        throw std::invalid_argument("Ungültiges Koordinatenformat: " + coordStr);
-    }
-}
-
 std::ostream& operator<<(std::ostream& stream, const Coordinate& coord){
     if (coord.latitutde == LATITUDE::NORTH){
         stream << "N:";
@@ -102,10 +58,54 @@ Coordinate stringToCoordinate(const std::string& coord_string){
     std::regex re(R"((\S+)\s(\S+))");
     std::smatch match;
 
+    auto getCoordinate = [&](const std::string& coordStr, Coordinate& coord){
+        std::regex re(R"((\d+)°(\d+)′([\d.]+)″([NSEOW]))");
+        std::smatch match;
+
+        if (std::regex_search(coordStr, match, re)) {
+            double degrees = std::stod(match[1].str());
+            double minutes = std::stod(match[2].str());
+            double seconds = std::stod(match[3].str());
+            char direction = match[4].str()[0];
+
+            double decimal = degrees + minutes / 60.0 + seconds / 3600.0;
+
+            switch (direction)
+            {
+            case 'N':
+                coord.latitutde = LATITUDE::NORTH;
+                coord.latitude_degree = decimal;
+                break;
+            case 'E':
+                coord.longitude = LONGITUDE::EAST;
+                coord.longitude_degree = decimal;
+                break;
+            case 'O':
+                coord.longitude = LONGITUDE::EAST;
+                coord.longitude_degree = decimal;
+                break;
+            case 'S':
+                coord.latitutde = LATITUDE::SOUTH;
+                coord.latitude_degree = (-1) * decimal;
+                break;
+            case 'W':
+                coord.longitude = LONGITUDE::WEST;
+                coord.longitude_degree = (-1) * decimal;
+                break;
+            
+            default:
+                break;
+            }
+            return;
+        } else {
+            throw std::invalid_argument("Ungültiges Koordinatenformat: " + coordStr);
+        }
+    };
+
     if (std::regex_search(coord_string, match, re)) {
 
-        stringToCoord_(match[1].str(), coord);
-        stringToCoord_(match[2].str(), coord);
+        getCoordinate(match[1].str(), coord);
+        getCoordinate(match[2].str(), coord);
     }
 
     return coord;
@@ -177,7 +177,7 @@ bool downloadAndExtractData(const std::string& save_directory, const std::string
     return true;
 }
 
-bool downloadGeoData(const std::string& data_dir, const std::string& left_down_str, const std::string& right_up_str, WRITE_OUTPUT wout, bool keep_doc){
+bool getGeoData(const std::string& data_dir, const std::string& left_down_str, const std::string& right_up_str, WRITE_OUTPUT wout, bool keep_doc){
     Coordinate left_down = stringToCoordinate(left_down_str);
     Coordinate right_up = stringToCoordinate(right_up_str);
 
@@ -206,8 +206,12 @@ bool downloadGeoData(const std::string& data_dir, const std::string& left_down_s
 
     if(!std::filesystem::exists(save_dir)){
         system(("mkdir " + save_dir).c_str());
-        system(("rm log.txt").c_str());
+        system("rm -f log.txt");
     }
+    else{
+        system(("rm -r " + save_dir + "/*").c_str());
+    }
+
 
     for (int latitude = min_latitude; latitude <= max_latitude; latitude = latitude + 10){
         for (int longitude = min_longitude; longitude <= max_longitude; longitude = longitude + 10){
@@ -223,7 +227,7 @@ bool downloadGeoData(const std::string& data_dir, const std::string& left_down_s
     }
 
     if(!keep_doc){
-        system(std::string("rm " + save_dir + "HydroSHEDS_TechDoc*.pdf").c_str());
+        system(std::string("rm -f " + save_dir + "HydroSHEDS_TechDoc*.pdf").c_str());
     }
 
     return true;

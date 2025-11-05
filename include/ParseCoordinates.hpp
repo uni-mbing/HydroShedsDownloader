@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& stream, const Coordinate& coord);
 
 Coordinate stringToCoordinate(const std::string& coord_string);
 
-bool downloadGeoData(const std::string& save_dir, const std::string& left_down_str, const std::string& right_up_str, WRITE_OUTPUT wout = WRITE_OUTPUT::DISCARD, bool keep_doc = false);
+bool getGeoData(const std::string& save_dir, const std::string& left_down_str, const std::string& right_up_str, WRITE_OUTPUT wout = WRITE_OUTPUT::DISCARD, bool keep_doc = false);
 
 inline std::map<std::pair<int,int>, std::string> tileToContinentPrefix = {
         // Africa
